@@ -32,6 +32,7 @@ public class ServerHost
     public HttpServer Server { get; private set; } = null!;
 
     public IOnlineStateManager? OnlineStates { get; private set; }
+    public IMultiRoomManager? MultiplayerRooms { get; private set; }
 
     private readonly ServerConfig config;
     private readonly List<IModule> modules = new();
@@ -198,6 +199,7 @@ public class ServerHost
                 modules.Add(mod);
 
                 OnlineStates ??= mod as IOnlineStateManager;
+                MultiplayerRooms ??= mod as IMultiRoomManager;
 
                 Logger.Log($"Loaded module {mod}!");
             }
