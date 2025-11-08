@@ -31,27 +31,19 @@ public class ScoresRoute : IFluxelAPIRoute
         }
 
         float rate = 1f;
-        Console.WriteLine("parsed payload successfully");
-        Console.WriteLine("mods : ");
 
         foreach (var payloadMod in payload.Mods)
         {
-            Console.WriteLine("mod: " + payloadMod);
-
             if (payloadMod.EndsWith("x"))
             {
                 var numberPart = payloadMod[..^1];
-                Console.WriteLine("Number: " + numberPart);
 
                 if (float.TryParse(numberPart, NumberStyles.Float, CultureInfo.InvariantCulture, out float parsed))
                 {
                     rate = parsed;
-                    Console.WriteLine("rate set to: " + rate);
                 }
             }
         }
-
-        Console.WriteLine("rate set to: " + rate);
 
         Map? map = MapHelper.GetByHash(payload.MapHash);
 
@@ -62,15 +54,13 @@ public class ScoresRoute : IFluxelAPIRoute
             return;
         }
 
-        Console.WriteLine("Map " + map.SetID + " (" + map.FileName + ")");
-
         if (payload.Scores.Count == 0)
         {
             await interaction.ReplyMessage(HttpStatusCode.BadRequest, "score contains no players");
             return;
         }
 
-        //only submit handle player 1 for now
+        //only handle the first player for now
         Score userScore = new Score
         {
             UserID = payload.Scores[0].UserID,
@@ -84,7 +74,6 @@ public class ScoresRoute : IFluxelAPIRoute
 
         if (user == null)
         {
-            Console.WriteLine("user with id: " + userScore.UserID);
             await interaction.ReplyMessage(HttpStatusCode.BadRequest, "failed to get user");
             return;
         }
@@ -155,7 +144,6 @@ public class ScoresRoute : IFluxelAPIRoute
         }
         catch (Exception e)
         {
-            Console.WriteLine("Failed to update user: " + e.Message);
             await interaction.ReplyMessage(HttpStatusCode.InternalServerError, "failed to recalculate user stats");
             return;
         }
@@ -165,14 +153,11 @@ public class ScoresRoute : IFluxelAPIRoute
 
         if (user == null)
         {
-            Console.WriteLine("user with id: " + userScore.UserID);
             await interaction.ReplyMessage(HttpStatusCode.BadRequest, "failed to get user");
             return;
         }
 
         ScoreSubmissionStats response = makeScoreSubmissionStats(userScore, prevOvr, prevPrt, prevRank, user.OverallRating, user.PotentialRating, user.GetGlobalRank());
-
-        //TODO: handle replay
 
         await interaction.Reply(HttpStatusCode.OK, response);
     }
@@ -184,9 +169,9 @@ public class ScoresRoute : IFluxelAPIRoute
             {
                 ID = score.ID,
                 Accuracy = score.Accuracy,
-                AlrightCount = score.AlrightCount,
                 FlawlessCount = score.FlawlessCount,
                 PerfectCount = score.PerfectCount,
+                AlrightCount = score.AlrightCount,
                 OkayCount = score.OkayCount,
                 MissCount = score.MissCount,
                 MaxCombo = score.MaxCombo,
@@ -194,6 +179,8 @@ public class ScoresRoute : IFluxelAPIRoute
                 Rank = score.Grade,
                 PerformanceRating = score.PerformanceRating,
                 Time = score.TimeLong,
+                Mods = score.Mods,
+                Mode = score.Mode,
                 User = new APIUser
                 {
                     ID = score.UserID,
