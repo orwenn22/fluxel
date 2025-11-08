@@ -197,6 +197,8 @@ public class ServerHost
                 Server.RegisterAPI<FluxelAPIInteraction, IFluxelAPIRoute>(assembly);
                 modules.Add(mod);
 
+                OnlineStates ??= mod as IOnlineStateManager;
+
                 Logger.Log($"Loaded module {mod}!");
             }
         }
