@@ -1,5 +1,6 @@
 ﻿using fluxel.Database.Extensions;
 using fluxel.Database.Helpers;
+using fluxel.Modules.Messages;
 using fluxel.WebSocket;
 using fluXis.Online.Notifications;
 using Newtonsoft.Json.Linq;
@@ -15,7 +16,7 @@ public class NotificationSocket : AuthenticatedSocket<INotificationServer, INoti
         base.OnOpen();
 
         Client.Login(UserHelper.Get(UserID)?.ToAPI() ?? throw new ArgumentNullException(nameof(UserID), "how."));
-        Events.UserOnline(UserID);
+        ServerHost.Instance.SendMessage(new UserOnlineStateMessage(UserID, true));
 
         if (CurrentUser.ForceNameChange)
             Client.ForceNameChange();
@@ -24,7 +25,7 @@ public class NotificationSocket : AuthenticatedSocket<INotificationServer, INoti
     protected override void OnClose()
     {
         base.OnClose();
-        Events.UserOffline(UserID);
+        ServerHost.Instance.SendMessage(new UserOnlineStateMessage(UserID, false));
     }
 
     public Task UpdateActivity(string name, JObject data)

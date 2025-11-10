@@ -1,4 +1,5 @@
 ﻿using fluxel.Modules;
+using fluxel.Modules.Messages;
 using fluxel.Multiplayer.Lobby;
 using fluXis.Online.API.Models.Multi;
 using Midori.Networking;
@@ -14,6 +15,19 @@ public class MultiplayerModule : IModule, IMultiRoomManager
         Sockets = host.Server.MapModule<MultiplayerSocket>("/multiplayer");
 
         MultiplayerRoomManager.StartThread();
+    }
+
+    public void OnMessage(object data)
+    {
+        switch (data)
+        {
+            case UserOnlineStateMessage onl:
+            {
+                var room = MultiplayerRoomManager.GetCurrentRoom(onl.UserID);
+                room?.Disconnect(onl.UserID);
+                break;
+            }
+        }
     }
 
     MultiplayerRoom? IMultiRoomManager.WithPlayer(long id) => MultiplayerRoomManager.GetCurrentRoom(id)?.ToAPI();

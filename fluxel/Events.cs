@@ -15,44 +15,6 @@ namespace fluxel;
 
 public static class Events
 {
-    public static void UserOnline(long id)
-    {
-        // TODO: wa
-        /*// if user is already online
-        if (Program.NotificationConnections.Count(x => x.UserID == id) > 1)
-        {
-            var connections = Program.NotificationConnections.Where(x => x.UserID == id).ToList();
-            var lastConnection = connections.OrderBy(x => x.StartTime).First();
-            lastConnection.Client.Logout("Logged in from another location.");
-            // potentially force disconnect
-        }*/
-
-        notifyOnlineState(id, true);
-        UserHelper.LogOnline(id, true);
-    }
-
-    public static void UserOffline(long id)
-    {
-        UserHelper.UpdateLocked(id, u => u.LastLogin = DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-
-        // TODO: wa
-        // var room = MultiplayerRoomManager.GetCurrentRoom(id);
-        // room?.Disconnect(id);
-
-        notifyOnlineState(id, false);
-        UserHelper.LogOnline(id, false);
-    }
-
-    private static void notifyOnlineState(long id, bool online)
-    {
-        var user = UserHelper.Get(id) ?? throw new ArgumentNullException(nameof(User), "erm");
-        var followers = RelationHelper.GetFollowers(id);
-
-        // TODO: wa
-        // Program.NotificationConnections.Where(s => followers.Contains(s.UserID))
-               // .ForEach(s => s.Client.NotifyFriendStatus(user.ToAPI(), online));
-    }
-
     public static void UploadMap(long mapsetId)
     {
         var set = MapSetHelper.Get(mapsetId) ?? throw new ArgumentNullException(nameof(MapSet), "erm");

@@ -1,4 +1,5 @@
-﻿using fluxel.Database.Helpers;
+﻿using fluxel.Database.Extensions;
+using fluxel.Database.Helpers;
 using fluxel.Modules;
 using fluxel.Modules.Messages;
 using fluxel.Tasks.Management;
@@ -39,6 +40,35 @@ public class NotificationsModule : IModule, IOnlineStateManager
             case UserNotificationMessage notif:
             {
                 Sockets.Where(x => x.UserID == notif.UserID).ForEach(x => x.Client.NotificationReceived(notif.Notification));
+                break;
+            }
+
+            case UserOnlineStateMessage onl:
+            {
+                var user = UserHelper.Get(onl.UserID) ?? throw new InvalidOperationException("Received online state update with non-existing user.");
+                var followers = RelationHelper.GetFollowers(onl.UserID);
+
+                Sockets.Where(s => followers.Contains(s.UserID))
+                       .ForEach(s => s.Client.NotifyFriendStatus(user.ToAPI(), onl.Online));
+
+                if (onl.Online)
+                {
+                    UserHelper.LogOnline(onl.UserID, true);
+
+                    if (Sockets.Count(x => x.UserID == onl.UserID) > 1)
+                    {
+                        var connections = Sockets.Where(x => x.UserID == onl.UserID).ToList();
+                        var lastConnection = connections.OrderBy(x => x.StartTime).First();
+                        lastConnection.Client.Logout("Logged in from another location.");
+                        // potentially force disconnect
+                    }
+                }
+                else
+                {
+                    UserHelper.UpdateLocked(onl.UserID, u => u.LastLogin = DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+                    UserHelper.LogOnline(onl.UserID, false);
+                }
+
                 break;
             }
         }
