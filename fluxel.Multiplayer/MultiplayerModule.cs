@@ -23,8 +23,10 @@ public class MultiplayerModule : IModule, IMultiRoomManager
         {
             case UserOnlineStateMessage onl:
             {
-                var room = MultiplayerRoomManager.GetCurrentRoom(onl.UserID);
-                room?.Disconnect(onl.UserID);
+                if (onl.Online) return;
+
+                var sock = Sockets.FirstOrDefault(x => x.UserID == onl.UserID);
+                sock?.LeaveRoom();
                 break;
             }
         }

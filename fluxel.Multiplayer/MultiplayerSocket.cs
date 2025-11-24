@@ -22,7 +22,7 @@ public class MultiplayerSocket : AuthenticatedSocket<IMultiplayerServer, IMultip
         if (Room is not null)
             throw RoomException.AlreadyInRoom();
 
-        Room = MultiplayerRoomManager.Create(UserID, name, privacy, password, map);
+        Room = MultiplayerRoomManager.Create(this, name, privacy, password, map);
         return Task.FromResult(Room.ToAPI());
     }
 
@@ -51,7 +51,7 @@ public class MultiplayerSocket : AuthenticatedSocket<IMultiplayerServer, IMultip
         if (!UserHelper.TryGet(UserID, out _))
             return null!;
 
-        var participant = new ServerMultiplayerRoom.Participant(UserID);
+        var participant = new ServerMultiplayerRoom.Participant(this);
         room.Participants.Add(participant);
         Room = room;
 
@@ -69,16 +69,13 @@ public class MultiplayerSocket : AuthenticatedSocket<IMultiplayerServer, IMultip
 
     public async Task LeaveRoom()
     {
-        if (Room is null)
-            throw RoomException.NotInRoom();
+        var user = Room?.Participants.FirstOrDefault(u => u.ID == UserID);
 
-        var user = Room.Participants.FirstOrDefault(u => u.ID == UserID);
-
-        if (user == null)
+        if (Room == null || user == null)
             return;
 
-        Room.Participants.Remove(user);
         await All.ForEachAsync(c => c.Client.UserLeft(user.ID));
+        Room.Participants.Remove(user);
 
         // who knows maybe they leave in the middle of a game
         // while all others are done

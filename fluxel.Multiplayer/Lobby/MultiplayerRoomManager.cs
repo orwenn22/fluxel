@@ -33,7 +33,7 @@ public static class MultiplayerRoomManager
         running = false;
     }
 
-    public static ServerMultiplayerRoom Create(long host, string name, MultiplayerPrivacy privacy, string password, long map)
+    public static ServerMultiplayerRoom Create(MultiplayerSocket host, string name, MultiplayerPrivacy privacy, string password, long map)
     {
         var room = new ServerMultiplayerRoom(idCounter++, host, name, privacy, password, map);
         Lobbies.Add(room);
