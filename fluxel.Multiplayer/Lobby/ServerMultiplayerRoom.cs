@@ -25,20 +25,19 @@ public class ServerMultiplayerRoom
     public List<(long, int)> ScheduledScores { get; } = new();
     public List<string> CurrentMods { get; set; } = new();
 
-    public IEnumerable<MultiplayerSocket> All => MultiplayerModule.Sockets.Where(x => HasPlayer(x.UserID));
+    public IEnumerable<MultiplayerSocket> All => Participants.Select(x => x.Socket);
 
     public readonly SemaphoreSlim RoomLock = new(1, 1);
 
-    public ServerMultiplayerRoom(long id, long host, string name, MultiplayerPrivacy privacy, string password, long map)
+    public ServerMultiplayerRoom(long id, MultiplayerSocket host, string name, MultiplayerPrivacy privacy, string password, long map)
     {
         RoomID = id;
-        HostID = host;
+        HostID = host.UserID;
         RoomName = name;
         Privacy = privacy;
         Password = password;
         MapID = map;
 
-        // add host to player list
         Participants.Add(new Participant(host));
     }
 
@@ -113,10 +112,6 @@ public class ServerMultiplayerRoom
         }
     }
 
-    public void Disconnect(long id)
-    {
-    }
-
     public bool HasPlayer(long id) => Participants.Any(u => u.ID == id);
     public Participant? GetPlayer(long id) => Participants.FirstOrDefault(u => u.ID == id);
 
@@ -132,13 +127,15 @@ public class ServerMultiplayerRoom
 
     public class Participant
     {
-        public long ID { get; }
+        public MultiplayerSocket Socket { get; }
+        public long ID => Socket.UserID;
+
         public MultiplayerUserState State { get; set; } = MultiplayerUserState.Idle;
         public ScoreInfo? Score { get; set; }
 
-        public Participant(long id)
+        public Participant(MultiplayerSocket sock)
         {
-            ID = id;
+            Socket = sock;
         }
 
         public MultiplayerParticipant ToAPI() => new()
