@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.Entities;
@@ -12,6 +13,8 @@ using fluxel.Bot.Commands.Testing;
 using fluxel.Bot.Components;
 using fluxel.Bot.Utils;
 using fluxel.Config;
+using fluxel.Database.Helpers;
+using fluxel.Modules.Messages.Chat;
 using Midori.Logging;
 
 namespace fluxel.Bot;
@@ -37,7 +40,7 @@ public static class DiscordBot
         {
             Token = config.Token,
             TokenType = TokenType.Bot,
-            Intents = DiscordIntents.AllUnprivileged,
+            Intents = DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents,
             AutoReconnect = true,
             MinimumLogLevel = Microsoft.Extensions.Logging.LogLevel.None
         });
@@ -60,6 +63,8 @@ public static class DiscordBot
 
         Bot.Ready += ready;
         Bot.InteractionCreated += onInteraction;
+        Bot.MessageCreated += messageCreated;
+        Bot.MessageDeleted += messageDeleted;
         await Bot.ConnectAsync();
     }
 
@@ -102,6 +107,59 @@ public static class DiscordBot
         await Bot.UpdateStatusAsync(new DiscordActivity("fluXis", ActivityType.Playing));
     }
 
+    private static Task messageCreated(DiscordClient _, MessageCreateEventArgs args)
+    {
+        if (args.Channel.Id != config.ChatLink)
+            return Task.CompletedTask;
+        if (args.Author.IsBot)
+            return Task.CompletedTask;
+
+        if (string.IsNullOrWhiteSpace(args.Message.Content))
+        {
+            Logger.Log("No message content. Is the message content intent enabled?");
+            return Task.CompletedTask;
+        }
+
+        var user = UserHelper.GetByDiscordID(args.Author.Id);
+
+        if (user is null)
+        {
+            try
+            {
+                args.Message.DeleteAsync();
+
+                var member = args.Guild.GetMemberAsync(args.Author.Id).Result;
+                var channel = member.CreateDmChannelAsync().Result;
+
+                var sb = new StringBuilder();
+                sb.AppendLine("Your message has not been sent because your discord account is not linked to any fluXis account.");
+                sb.AppendLine("Head to https://auth.flux.moe/link/discord to link your account."); // should probably be set through envvars but i cba
+                channel.SendMessageAsync(new DiscordMessageBuilder().WithContent(sb.ToString()));
+            }
+            catch { }
+
+            return Task.CompletedTask;
+        }
+
+        var message = ChatHelper.Add(user.ID, args.Message.Content, "general", args.Message.Id);
+        ServerHost.Instance.SendMessage(new ChatMessageCreateMessage(message.ID));
+
+        return Task.CompletedTask;
+    }
+
+    private static Task messageDeleted(DiscordClient _, MessageDeleteEventArgs args)
+    {
+        if (args.Channel.Id != config.ChatLink)
+            return Task.CompletedTask;
+
+        var message = ChatHelper.GetByDiscordID(args.Message.Id);
+        if (message is null) return Task.CompletedTask;
+
+        ChatHelper.Delete(message);
+        ServerHost.Instance.SendMessage(new ChatMessageDeleteMessage(message.ID));
+        return Task.CompletedTask;
+    }
+
     private static DiscordChannel? getChannel(ulong id) => Bot?.GetChannelAsync(id).Result;
 
     public static DiscordChannel? GetChannel(ChannelType type) => type switch
@@ -112,6 +170,7 @@ public static class DiscordBot
         ChannelType.MapRanked => getChannel(config.MapRanked),
         ChannelType.Queue => getChannel(config.QueueUpdates),
         ChannelType.MapFirstPlace => getChannel(config.MapFirstPlace),
+        ChannelType.ChatLink => getChannel(config.ChatLink),
         _ => null
     };
 
@@ -140,6 +199,7 @@ public static class DiscordBot
         MapSubmissions,
         MapRanked,
         Queue,
-        MapFirstPlace
+        MapFirstPlace,
+        ChatLink
     }
 }

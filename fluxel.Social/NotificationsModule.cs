@@ -1,8 +1,13 @@
-﻿using fluxel.Database.Extensions;
+﻿using DSharpPlus.Entities;
+using fluxel.Bot;
+using fluxel.Database.Extensions;
 using fluxel.Database.Helpers;
 using fluxel.Modules;
 using fluxel.Modules.Messages;
+using fluxel.Modules.Messages.Chat;
 using fluxel.Tasks.Management;
+using fluxel.Utils;
+using fluXis.Graphics.UserInterface.Color;
 using fluXis.Online.API.Models.Users;
 using Midori.Networking;
 using osu.Framework.Extensions.IEnumerableExtensions;
@@ -69,6 +74,44 @@ public class NotificationsModule : IModule, IOnlineStateManager
                     UserHelper.LogOnline(onl.UserID, false);
                 }
 
+                break;
+            }
+
+            case ChatMessageCreateMessage cmc:
+            {
+                var message = ChatHelper.Get(cmc.Message);
+                if (message is null) throw new InvalidOperationException();
+
+                Sockets.ForEach(x => x.Client.ReceiveChatMessage(message.ToAPI()));
+
+                if (message.Channel != "general" || message.DiscordID != null) return;
+
+                var user = UserHelper.Get(message.SenderID);
+                if (user is null) return; // this vexes me
+
+                var dmsg = DiscordBot.GetChannel(DiscordBot.ChannelType.ChatLink)?.SendMessageAsync(
+                    new DiscordMessageBuilder()
+                        .WithEmbed(new DiscordEmbedBuilder()
+                                   .WithColor(Theme.Highlight.ToDiscord())
+                                   .WithAuthor(user.Username, user.Url, user.AvatarUrl)
+                                   .WithDescription(message.Content)
+                        )
+                ).Result;
+
+                if (dmsg is null) return;
+
+                ChatHelper.AttachDiscordID(message.ID, dmsg.Id);
+                break;
+            }
+
+            case ChatMessageDeleteMessage cmd:
+            {
+                var message = ChatHelper.Get(cmd.Message);
+                if (message is null) throw new InvalidOperationException();
+
+                Sockets.ForEach(c => c.Client.DeleteChatMessage(message.Channel, message.ID.ToString()));
+
+                // delete from discord
                 break;
             }
         }

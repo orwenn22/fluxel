@@ -51,6 +51,7 @@ public static class UserHelper
     }
 
     public static IEnumerable<User> GetMany(IEnumerable<long> ids) => users.Find(u => ids.Contains(u.ID)).ToList();
+    public static User? GetByDiscordID(ulong id) => users.Find(x => x.DiscordID == id).FirstOrDefault();
 
     #region Get (E-Mail)
 

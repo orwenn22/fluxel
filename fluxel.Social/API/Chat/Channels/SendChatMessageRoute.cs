@@ -1,11 +1,10 @@
 ﻿using fluxel.API.Components;
 using fluxel.Constants;
 using fluxel.Database.Helpers;
-using fluxel.Models.Chat;
+using fluxel.Modules.Messages.Chat;
 using fluXis.Online.API.Payloads.Chat;
 using Midori.API.Components.Interfaces;
 using Midori.Networking;
-using osu.Framework.Extensions.IEnumerableExtensions;
 
 namespace fluxel.Social.API.Chat.Channels;
 
@@ -30,19 +29,18 @@ public class SendChatMessageRoute : IFluxelAPIRoute, INeedsAuthorization
 
         if (string.IsNullOrEmpty(payload.Content))
         {
-            await interaction.ReplyMessage(HttpStatusCode.BadRequest, "message is empty");
+            await interaction.ReplyMessage(HttpStatusCode.BadRequest, "Message cannot be empty.");
             return;
         }
 
-        var message = new ChatMessage
+        if (payload.Content.Length > 2048)
         {
-            SenderID = interaction.UserID,
-            Content = payload.Content,
-            Channel = channel
-        };
+            await interaction.ReplyMessage(HttpStatusCode.BadRequest, "Message exceeds 2048 characters.");
+            return;
+        }
 
-        ChatHelper.Add(message);
-        NotificationsModule.Sockets.ForEach(c => c.Client.ReceiveChatMessage(message.ToAPI()));
+        var message = ChatHelper.Add(interaction.UserID, payload.Content, channel);
+        ServerHost.Instance.SendMessage(new ChatMessageCreateMessage(message.ID));
         await interaction.Reply(HttpStatusCode.Created, message);
     }
 }

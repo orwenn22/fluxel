@@ -14,6 +14,9 @@ public class ChatMessage
     [BsonId]
     public Guid ID { get; set; } = Guid.NewGuid();
 
+    [BsonElement("discord")]
+    public ulong? DiscordID { get; set; }
+
     [BsonElement("created")]
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.Now;
 

@@ -209,19 +209,17 @@ public class ServerHost
         }
     }
 
-    public void SendMessage(object data)
+    public void SendMessage(object data) => modules.ForEach(x =>
     {
-        modules.ForEach(x =>
+        try
         {
-            try
-            {
-                x.OnMessage(data);
-            }
-            catch (Exception ex)
-            {
-            }
-        });
-    }
+            x.OnMessage(data);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, $"Module '{x.GetType().Name}' failed to handle '{data.GetType().Name}'.");
+        }
+    });
 
     #endregion
 }

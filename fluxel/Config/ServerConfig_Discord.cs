@@ -35,5 +35,10 @@ public partial class ServerConfig
         /// When someone gets first place on a map.
         /// </summary>
         public ulong MapFirstPlace { get; init; }
+
+        /// <summary>
+        /// Links the #general chat channel and sends messages both ways
+        /// </summary>
+        public ulong ChatLink { get; init; }
     }
 }

@@ -39,6 +39,7 @@ internal static class Program
                 MapFirstPlace = envULong("DISCORD_FIRST_PLACE"),
                 MapRanked = envULong("DISCORD_RANKED"),
                 QueueUpdates = envULong("DISCORD_QUEUE"),
+                ChatLink = envULong("DISCORD_CHAT_LINK")
             },
             Mail = new ServerConfig.MailConfig
             {
