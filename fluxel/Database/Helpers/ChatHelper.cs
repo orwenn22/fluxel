@@ -62,6 +62,18 @@ public static class ChatHelper
         Users = ids ?? new List<long>()
     });
 
+    public static ChatChannel CreateDirectChannel(string name, long one, long two)
+    {
+        var chan = new ChatChannel(name, APIChannelType.Private)
+        {
+            Target1 = one,
+            Target2 = two
+        };
+
+        channels.InsertOne(chan);
+        return chan;
+    }
+
     public static ChatChannel? GetChannel(string name) => channels.Find(x => x.Name.ToLowerInvariant() == name.ToLowerInvariant()).FirstOrDefault();
 
     public static IEnumerable<ChatChannel> WithMember(long id) => channels.Find(x => x.Users.Contains(id)).ToList();

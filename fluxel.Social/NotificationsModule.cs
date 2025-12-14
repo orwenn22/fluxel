@@ -117,6 +117,8 @@ public class NotificationsModule : IModule, IOnlineStateManager
         }
     }
 
+    public static NotificationSocket? SocketByID(long id) => Sockets.FirstOrDefault(x => x.UserID == id);
+
     private static void fixInvalidOnlineStates()
     {
         var online = UserHelper.LastOnlineLogs();

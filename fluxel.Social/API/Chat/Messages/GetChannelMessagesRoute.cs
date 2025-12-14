@@ -4,7 +4,7 @@ using fluxel.Database.Helpers;
 using Midori.Networking;
 using osu.Framework.Extensions.IEnumerableExtensions;
 
-namespace fluxel.Social.API.Chat.Channels;
+namespace fluxel.Social.API.Chat.Messages;
 
 public class GetChannelMessagesRoute : IFluxelAPIRoute
 {

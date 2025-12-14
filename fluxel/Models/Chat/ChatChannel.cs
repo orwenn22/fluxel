@@ -18,6 +18,12 @@ public class ChatChannel
     [BsonElement("users")]
     public List<long> Users { get; init; } = new();
 
+    [BsonElement("dm_target_1")]
+    public long? Target1 { get; set; }
+
+    [BsonElement("dm_target_2")]
+    public long? Target2 { get; set; }
+
     public ChatChannel(string name, APIChannelType type)
     {
         Name = name;

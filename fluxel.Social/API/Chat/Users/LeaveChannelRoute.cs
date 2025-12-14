@@ -4,12 +4,12 @@ using fluxel.Database.Helpers;
 using fluXis.Online.API.Models.Chat;
 using Midori.Networking;
 
-namespace fluxel.Social.API.Chat.Channels.Users;
+namespace fluxel.Social.API.Chat.Users;
 
-public class JoinChannelRoute : IFluxelAPIRoute
+public class LeaveChannelRoute : IFluxelAPIRoute
 {
     public string RoutePath => "/chat/channels/:channel/users/:userid";
-    public HttpMethod Method => HttpMethod.Put;
+    public HttpMethod Method => HttpMethod.Delete;
 
     public async Task Handle(FluxelAPIInteraction interaction)
     {
@@ -35,18 +35,19 @@ public class JoinChannelRoute : IFluxelAPIRoute
 
         if (chan.Type != APIChannelType.Public)
         {
-            await interaction.ReplyMessage(HttpStatusCode.Forbidden, "you can only join public channels");
+            await interaction.ReplyMessage(HttpStatusCode.Forbidden, "you can only leave public channels");
             return;
         }
 
         if (userid != interaction.UserID)
         {
-            await interaction.ReplyMessage(HttpStatusCode.Forbidden, "you cannot add other people to channels");
+            await interaction.ReplyMessage(HttpStatusCode.Forbidden, "you cannot remove other people from channels");
             return;
         }
 
-        var result = ChatHelper.AddToChannel(chan.Name, userid);
-        await interaction.Reply(result ? HttpStatusCode.Created : HttpStatusCode.NotModified);
-        NotificationsModule.Sockets.FirstOrDefault(x => x.UserID == userid)?.Client.AddToChatChannel(channel);
+        var result = ChatHelper.RemoveFromChannel(chan.Name, userid);
+        await interaction.Reply(result ? HttpStatusCode.OK : HttpStatusCode.NotModified);
+
+        NotificationsModule.Sockets.FirstOrDefault(x => x.UserID == userid)?.Client.RemoveFromChatChannel(channel);
     }
 }

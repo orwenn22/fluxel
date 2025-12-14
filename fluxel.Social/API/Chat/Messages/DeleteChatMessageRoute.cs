@@ -6,7 +6,7 @@ using fluxel.Modules.Messages.Chat;
 using Midori.API.Components.Interfaces;
 using Midori.Networking;
 
-namespace fluxel.Social.API.Chat.Channels;
+namespace fluxel.Social.API.Chat.Messages;
 
 public class DeleteChatMessageRoute : IFluxelAPIRoute, INeedsAuthorization
 {
