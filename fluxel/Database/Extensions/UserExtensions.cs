@@ -52,7 +52,7 @@ public static class UserExtensions
             u.Flags = (long)user.BanFlags;
 
         if (include.HasFlagFast(UserIncludes.Following) && reqID >= 0)
-            u.Following = RelationHelper.IsFollowing(reqID, user.ID);
+            u.Following = RelationHelper.GetFollowState(reqID, user.ID);
 
         if (include.HasFlagFast(UserIncludes.Socials))
         {

@@ -105,7 +105,7 @@ public class MapLeaderboardRoute : IFluxelAPIRoute, INeedsAuthorization
             // this is stupid
             // but also the best way
             if (interaction.UserID != -1)
-                api.User.Following = RelationHelper.IsFollowing(interaction.UserID, api.User.ID);
+                api.User.Following = RelationHelper.GetFollowState(interaction.UserID, api.User.ID);
 
             return api;
         })));
