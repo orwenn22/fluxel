@@ -13,13 +13,27 @@ public class GetChannelMessagesRoute : IFluxelAPIRoute
 
     public async Task Handle(FluxelAPIInteraction interaction)
     {
-        if (!interaction.TryGetStringParameter("channel", out var channel))
+        if (!interaction.TryGetStringParameter("channel", out var ch))
         {
             await interaction.ReplyMessage(HttpStatusCode.BadRequest, ResponseStrings.InvalidParameter("channel", "string"));
             return;
         }
 
-        var messages = ChatHelper.FromChannel(channel)
+        var channel = ChatHelper.GetChannel(ch);
+
+        if (channel is null)
+        {
+            await interaction.ReplyMessage(HttpStatusCode.NotFound, "This channel does not exist.");
+            return;
+        }
+
+        if (!channel.Users.Contains(interaction.UserID))
+        {
+            await interaction.ReplyMessage(HttpStatusCode.Forbidden, "Current user is not part of this channel.");
+            return;
+        }
+
+        var messages = ChatHelper.FromChannel(ch)
                                  .OrderByDescending(x => x.CreatedAt)
                                  .ToList().Take(50);
 

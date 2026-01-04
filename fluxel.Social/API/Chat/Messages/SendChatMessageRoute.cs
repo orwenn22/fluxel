@@ -37,6 +37,12 @@ public class SendChatMessageRoute : IFluxelAPIRoute, INeedsAuthorization
             return;
         }
 
+        if (!channel.Users.Contains(interaction.UserID))
+        {
+            await interaction.ReplyMessage(HttpStatusCode.Forbidden, "Current user is not part of this channel.");
+            return;
+        }
+
         if (string.IsNullOrEmpty(payload.Content))
         {
             await interaction.ReplyMessage(HttpStatusCode.BadRequest, "Message cannot be empty.");
