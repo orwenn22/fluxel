@@ -95,8 +95,8 @@ public class ScoresRoute : IFluxelAPIRoute
 
         foreach (var result in payload.Scores[0].Results)
         {
-            if (result.Landmine) mines++;
-            else if (result.HoldEnd)
+            if (result.Type == ResultType.Landmine) mines++;
+            else if (result.Type == ResultType.HoldEnd)
             {
                 hits--; //this is a head that was previously treated as a regular hit
                 lns++;
@@ -104,8 +104,8 @@ public class ScoresRoute : IFluxelAPIRoute
             else hits++;
 
             Judgement judgement =
-                result.Landmine ? landmineWindows.JudgementFor(result.Difference) :
-                result.HoldEnd ? releaseWindows.JudgementFor(result.Difference) :
+                result.Type == ResultType.Landmine ? landmineWindows.JudgementFor(result.Difference) :
+                result.Type == ResultType.HoldEnd ? releaseWindows.JudgementFor(result.Difference) :
                 hitWindows.JudgementFor(result.Difference);
 
             combo++;
@@ -177,7 +177,7 @@ public class ScoresRoute : IFluxelAPIRoute
         {
             UserHelper.UpdateLocked(userScore.UserID, u => u.Recalculate());
         }
-        catch (Exception e)
+        catch
         {
             await interaction.ReplyMessage(HttpStatusCode.InternalServerError, "failed to recalculate user stats");
             return;
